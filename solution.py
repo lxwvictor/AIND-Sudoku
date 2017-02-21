@@ -1,33 +1,6 @@
+from utils import *
+
 assignments = []
-
-cols = '123456789'
-rows = 'ABCDEFGHI'
-
-def cross(A, B):
-    "Cross product of elements in A and elements in B."
-    return [r + c for r in A for c in B]
-    pass
-
-boxes = cross(rows, cols)
-
-row_units = [cross(r, cols) for r in rows]
-column_units = [cross(rows, c) for c in cols]
-square_units = [cross(rs, cs) for rs in ('ABC','DEF','GHI') for cs in ('123','456','789')]
-
-unitlist = row_units + column_units + square_units
-units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
-peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
-
-diag_units1 = []
-diag_units2 = []
-for i in range(0, 9):
-    diag_units1.append([cross(r, c) for r in rows[i] for c in cols[i]][0][0])
-    diag_units2.append([cross(r, c) for r in rows[8-i] for c in cols[i]][0][0])
-diag_units = [diag_units1, diag_units2]
-
-diagunitlist = unitlist + diag_units
-diagunits = dict((s, [u for u in diagunitlist if s in u]) for s in boxes)
-diagpeers = dict((s, set(sum(diagunits[s],[]))-set([s])) for s in boxes)
 
 def assign_value(values, box, value):
     """
@@ -54,9 +27,6 @@ def naked_twins(values):
     while not stalled:
         # Idenify the boxes with 2 values
         twoVsBoxes = [box for box in values.keys() if len(values[box]) == 2]
-        #print("before naked twin")
-        #print(values)
-        #display(values)
 
         # Copy the value of current values dictionary, need to use copy() function
         old_values = values.copy()
@@ -76,18 +46,13 @@ def naked_twins(values):
                             peerBoxV = peerBoxV.replace(digit1, '')
                             peerBoxV = peerBoxV.replace(digit2, '')
                             values = assign_value(values, peerBox, peerBoxV)
-        #print('after naked twins')
-        #print(values)
-        #display(values)
+
         if old_values == values:    # If one loop doesn't change anything
             stalled = True
-        #print('stalled', stalled)
 
-    #print('final naked twins', type(values))
-    #print(values)
-    #display(values)
     return values   # Must return values for assertion test
 
+# Nothing different than previous function, except diagonal rule
 def diag_naked_twins(values):
     """Eliminate values using the naked twins strategy.
     Args:
@@ -103,9 +68,6 @@ def diag_naked_twins(values):
     while not stalled:
         # Idenify the boxes with 2 values
         twoVsBoxes = [box for box in values.keys() if len(values[box]) == 2]
-        #print("before naked twin")
-        #print(values)
-        #display(values)
 
         # Copy the value of current values dictionary, need to use copy() function
         old_values = values.copy()
@@ -125,16 +87,10 @@ def diag_naked_twins(values):
                             peerBoxV = peerBoxV.replace(digit1, '')
                             peerBoxV = peerBoxV.replace(digit2, '')
                             values = assign_value(values, peerBox, peerBoxV)
-        #print('after naked twins')
-        #print(values)
-        #display(values)
+
         if old_values == values:    # If one loop doesn't change anything
             stalled = True
-        #print('stalled', stalled)
 
-    #print('final naked twins', type(values))
-    #print(values)
-    #display(values)
     return values   # Must return values for assertion test
 
 def grid_values(grid):
@@ -174,6 +130,13 @@ def display(values):
     pass
 
 def eliminate(values):
+    """
+    Eliminate the values from a box if its peers have determined value
+    Args:
+        values(dict): The sudoku in dictionary form
+    Retursn:
+        values(dict): The sudoku in dictionary form after the elimination
+    """
     # Find the solved boxes, which are with only 1 value
     solved_values = [box for box in values.keys() if len(values[box]) == 1]
     for box in solved_values:
@@ -185,6 +148,14 @@ def eliminate(values):
 
 # Nothing different than previous function, except diagonal rule
 def diag_eliminate(values):
+    """
+    Eliminate the values from a box if its peers have determined value
+    Args:
+        values(dict): The sudoku in dictionary form
+    Retursn:
+        values(dict): The sudoku in dictionary form after the elimination
+    """
+    # Find the solved boxes, which are with only 1 value
     solved_values = [box for box in values.keys() if len(values[box]) == 1]
     for box in solved_values:
         digit = values[box]
@@ -194,6 +165,14 @@ def diag_eliminate(values):
     pass
 
 def only_choice(values):
+    """
+    If a box has multiple values, but for one specific value all its peers in the same unit
+    don't have it. Then the specific value will be assign to this box.
+    Args:
+        values(dict): The sudoku in dictionary form
+    Retursn:
+        values(dict): The sudoku in dictionary form after the only_choice
+    """
     for unit in unitlist:   # For every unit (9 boxes)
         for digit in '123456789':
             dplaces = [box for box in unit if digit in values[box]]
@@ -205,6 +184,14 @@ def only_choice(values):
 
 # Nothing different than previous function, except diagonal rule
 def diag_only_choice(values):
+    """
+    If a box has multiple values, but for one specific value all its peers in the same unit
+    don't have it. Then the specific value will be assign to this box.
+    Args:
+        values(dict): The sudoku in dictionary form
+    Retursn:
+        values(dict): The sudoku in dictionary form after the only_choice
+    """
     for diagunit in diagunitlist:
         for digit in '123456789':
             dplaces = [box for box in diagunit if digit in values[box]]
@@ -246,10 +233,11 @@ def diag_reduce_puzzle(values):
     return values
     pass
 
-def search1(values):    # My alternative search function which I think it's more sophisticated
-    # "Using depth‐first search and propagation, create a search tree and solve the sudoku."
-    # First, reduce the puzzle using the previous function     reduce_puzzle(values)
-    # Choose one of the unfilled squares with the fewest possibilities
+def search1(values):
+    """
+    My alternative search function which I think it's more sophisticated
+    """
+    # Apply the reduce_puzzle first
     values = reduce_puzzle(values)
     if values is False:
         return False
@@ -273,10 +261,10 @@ def search1(values):    # My alternative search function which I think it's more
                 return attempt  ### Even though the code cannot pass, but I think it's more Robost 
     pass
 
-def diag_search1(values):    # My alternative search function which I think it's more sophisticated
-    # "Using depth‐first search and propagation, create a search tree and solve the sudoku."
-    # First, reduce the puzzle using the previous function     reduce_puzzle(values)
-    # Choose one of the unfilled squares with the fewest possibilities
+def diag_search1(values):
+    """
+    My alternative search function which I think it's more sophisticated
+    """
     values = diag_reduce_puzzle(values)
     if values is False:
         return False
