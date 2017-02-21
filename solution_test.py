@@ -1,11 +1,7 @@
 import solution
 import unittest
 
-print("finished import")
-
-
 class TestNakedTwins(unittest.TestCase):
-    print("in unittest")
     before_naked_twins_1 = {'I6': '4', 'H9': '3', 'I2': '6', 'E8': '1', 'H3': '5', 'H7': '8', 'I7': '1', 'I4': '8',
                             'H5': '6', 'F9': '7', 'G7': '6', 'G6': '3', 'G5': '2', 'E1': '8', 'G3': '1', 'G2': '8',
                             'G1': '7', 'I1': '23', 'C8': '5', 'I3': '23', 'E5': '347', 'I5': '5', 'C9': '1', 'G9': '5',
@@ -69,16 +65,13 @@ class TestNakedTwins(unittest.TestCase):
          'H2': '2', 'H3': '4', 'H4': '9', 'H5': '1', 'H6': '8', 'H7': '5', 'H8': '3', 'H9': '6', 'I1': '9', 'I2': '3',
          'I3': '5', 'I4': '7', 'I5': '2', 'I6': '6', 'I7': '1', 'I8': '4', 'I9': '8'}
     ]
-    print("in class before def")
     def test_naked_twins(self):
         self.assertTrue(solution.naked_twins(self.before_naked_twins_1) in self.possible_solutions_1,
                         "Your naked_twins function produced an unexpected board.")
-
+        
     def test_naked_twins2(self):
         self.assertTrue(solution.naked_twins(self.before_naked_twins_2) in self.possible_solutions_2,
                         "Your naked_twins function produced an unexpected board.")
-
-
 
 class TestDiagonalSudoku(unittest.TestCase):
     diagonal_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
@@ -98,6 +91,5 @@ class TestDiagonalSudoku(unittest.TestCase):
         self.assertEqual(solution.solve(self.diagonal_grid), self.solved_diag_sudoku)
 
 if __name__ == '__main__':
-    print("in main__")
+
     unittest.main()
-    print("after main__")

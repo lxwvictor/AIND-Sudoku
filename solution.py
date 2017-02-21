@@ -37,34 +37,44 @@ def naked_twins(values):
     """
 
     # Find all instances of naked twins
-    # Eliminate the naked twins as possibilities for their peers
-    twoVsBoxes = [box for box in values.keys() if len(values[box]) == 2]
-    display(values)
-    print("twoVsBoxes", twoVsBoxes)
-    for box in twoVsBoxes:
-        for box2 in twoVsBoxes:
-            if box2 in peers[box] and values[box] == values[box2]:
-                print(box, box2, values[box])
-                digit1 = values[box][0]
-                digit2 = values[box][1]
+    # Eliminate the naked twins as possibilities for their peers    
+    stalled = False # Initilize the stalled value for looping
+    while not stalled:
+        # Idenify the boxes with 2 values
+        twoVsBoxes = [box for box in values.keys() if len(values[box]) == 2]
+        #print("before naked twin")
+        #print(values)
+        #display(values)
 
-                for peerBox in peers[box]:
-                    if (peerBox in peers[box2]) and len(values[peerBox]) > 1:
-                        peerBoxV = values[peerBox]
-                        print('br',peerBox, peerBoxV)
-                        peerBoxV = peerBoxV.replace(digit1, '')
-                        peerBoxV = peerBoxV.replace(digit2, '')
-                        assign_value(values, peerBox, peerBoxV)
-                        print('ar',peerBox, values[peerBox])
+        # Copy the value of current values dictionary, need to use copy() function
+        old_values = values.copy()
+        for box in twoVsBoxes:
+            for box2 in twoVsBoxes:
+                # In the nested loop, only proceed when the 2 chosen boxes are in
+                # the same unit. And the box values are the same, this is naked twins
+                if box2 in peers[box] and values[box] == values[box2]:
+                    digit1 = values[box][0]
+                    digit2 = values[box][1]
 
-    print('after naked twins')
-    display(values)
-    reduce_puzzle(values)
-    print('after reduce')
-    display(values)
-    search(values)
-    print('after search')
-    display(values)
+                    # Find the 3rd box from the same unit. It has to be the peer
+                    # of box and box2
+                    for peerBox in peers[box]:
+                        if (peerBox in peers[box2]) and len(values[peerBox]) > 1:
+                            peerBoxV = values[peerBox]
+                            peerBoxV = peerBoxV.replace(digit1, '')
+                            peerBoxV = peerBoxV.replace(digit2, '')
+                            assign_value(values, peerBox, peerBoxV)
+        #print('after naked twins')
+        #print(values)
+        #display(values)
+        if old_values == values:    # If one loop doesn't change anything
+            stalled = True
+        #print('stalled', stalled)
+
+    #print('final naked twins', type(values))
+    #print(values)
+    #display(values)
+    return values   # Must return values for assertion test
 
 def grid_values(grid):
     """
@@ -188,6 +198,7 @@ def solve(grid):
     Returns:
         The dictionary representation of the final sudoku grid. False if no solution exists.
     """
+
 
 if __name__ == '__main__':
     diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
