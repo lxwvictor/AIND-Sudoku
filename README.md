@@ -3,11 +3,11 @@
 
 # Question 1 (Naked Twins)
 Q: How do we use constraint propagation to solve the naked twins problem?  
-A: *Student should provide answer here*
+A: The reduce_puzzle function applies functions eliminate and only_choice iteratively until no progress can be made. So constraint propagation in this scenario is just one more step to apply naked_twins function in each iteration.
 
 # Question 2 (Diagonal Sudoku)
 Q: How do we use constraint propagation to solve the diagonal sudoku problem?  
-A: *Student should provide answer here*
+A: The logic of this scenario is exactly the same as the normal suduko, except the definition of the unitlist, units and peers are different. Because this time we need to consider the diagonal unit. All the code can be re-used except the change of the three variables mentioned.
 
 ### Install
 

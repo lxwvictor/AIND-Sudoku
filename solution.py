@@ -14,16 +14,16 @@ row_units = [cross(r, cols) for r in rows]
 column_units = [cross(rows, c) for c in cols]
 square_units = [cross(rs, cs) for rs in ('ABC','DEF','GHI') for cs in ('123','456','789')]
 
+unitlist = row_units + column_units + square_units
+units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
+peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
+
 diag_units1 = []
 diag_units2 = []
 for i in range(0, 9):
     diag_units1.append([cross(r, c) for r in rows[i] for c in cols[i]][0][0])
     diag_units2.append([cross(r, c) for r in rows[8-i] for c in cols[i]][0][0])
 diag_units = [diag_units1, diag_units2]
-
-unitlist = row_units + column_units + square_units
-units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
-peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
 
 diagunitlist = unitlist + diag_units
 diagunits = dict((s, [u for u in diagunitlist if s in u]) for s in boxes)
@@ -72,6 +72,55 @@ def naked_twins(values):
                     # of box and box2
                     for peerBox in peers[box]:
                         if (peerBox in peers[box2]) and len(values[peerBox]) > 1:
+                            peerBoxV = values[peerBox]
+                            peerBoxV = peerBoxV.replace(digit1, '')
+                            peerBoxV = peerBoxV.replace(digit2, '')
+                            assign_value(values, peerBox, peerBoxV)
+        #print('after naked twins')
+        #print(values)
+        #display(values)
+        if old_values == values:    # If one loop doesn't change anything
+            stalled = True
+        #print('stalled', stalled)
+
+    #print('final naked twins', type(values))
+    #print(values)
+    #display(values)
+    return values   # Must return values for assertion test
+
+def diag_naked_twins(values):
+    """Eliminate values using the naked twins strategy.
+    Args:
+        values(dict): a dictionary of the form {'box_name': '123456789', ...}
+
+    Returns:
+        the values dictionary with the naked twins eliminated from peers.
+    """
+
+    # Find all instances of naked twins
+    # Eliminate the naked twins as possibilities for their peers    
+    stalled = False # Initilize the stalled value for looping
+    while not stalled:
+        # Idenify the boxes with 2 values
+        twoVsBoxes = [box for box in values.keys() if len(values[box]) == 2]
+        #print("before naked twin")
+        #print(values)
+        #display(values)
+
+        # Copy the value of current values dictionary, need to use copy() function
+        old_values = values.copy()
+        for box in twoVsBoxes:
+            for box2 in twoVsBoxes:
+                # In the nested loop, only proceed when the 2 chosen boxes are in
+                # the same unit. And the box values are the same, this is naked twins
+                if box2 in diagpeers[box] and values[box] == values[box2]:
+                    digit1 = values[box][0]
+                    digit2 = values[box][1]
+
+                    # Find the 3rd box from the same unit. It has to be the peer
+                    # of box and box2
+                    for peerBox in diagpeers[box]:
+                        if (peerBox in diagpeers[box2]) and len(values[peerBox]) > 1:
                             peerBoxV = values[peerBox]
                             peerBoxV = peerBoxV.replace(digit1, '')
                             peerBoxV = peerBoxV.replace(digit2, '')
@@ -172,6 +221,7 @@ def reduce_puzzle(values):
         solved_values_before = len([box for box in values.keys() if len(values[box]) == 1])
         values = eliminate(values)
         values = only_choice(values)
+        values = naked_twins(values)
         # Count the number of solved boxes whoes value length is 1
         solved_values_after = len([box for box in values.keys() if len(values[box]) == 1])
         # If before and after count is the same, meaning no change, return
@@ -188,6 +238,7 @@ def diag_reduce_puzzle(values):
         solved_values_before = len([box for box in values.keys() if len(values[box]) == 1])
         values = diag_eliminate(values)
         values = diag_only_choice(values)
+        values = diag_naked_twins(values)
         solved_values_after = len([box for box in values.keys() if len(values[box]) == 1])
         stalled = solved_values_before == solved_values_after
         if len([box for box in values.keys() if len(values[box]) == 0]):
