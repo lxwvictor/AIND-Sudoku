@@ -13,9 +13,21 @@ boxes = cross(rows, cols)
 row_units = [cross(r, cols) for r in rows]
 column_units = [cross(rows, c) for c in cols]
 square_units = [cross(rs, cs) for rs in ('ABC','DEF','GHI') for cs in ('123','456','789')]
+
+diag_units1 = []
+diag_units2 = []
+for i in range(0, 9):
+    diag_units1.append([cross(r, c) for r in rows[i] for c in cols[i]][0][0])
+    diag_units2.append([cross(r, c) for r in rows[8-i] for c in cols[i]][0][0])
+diag_units = [diag_units1, diag_units2]
+
 unitlist = row_units + column_units + square_units
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
 peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
+
+diagunitlist = unitlist + diag_units
+diagunits = dict((s, [u for u in diagunitlist if s in u]) for s in boxes)
+diagpeers = dict((s, set(sum(diagunits[s],[]))-set([s])) for s in boxes)
 
 def assign_value(values, box, value):
     """
@@ -113,30 +125,69 @@ def display(values):
     pass
 
 def eliminate(values):
+    # Find the solved boxes, which are with only 1 value
     solved_values = [box for box in values.keys() if len(values[box]) == 1]
     for box in solved_values:
         digit = values[box]
-        for peer in peers[box]:
+        for peer in peers[box]: # Eliminate this value from all its peers
             values[peer] = values[peer].replace(digit,'')
     return values
     pass
 
+# Nothing different than previous function, except diagonal rule
+def diag_eliminate(values):
+    solved_values = [box for box in values.keys() if len(values[box]) == 1]
+    for box in solved_values:
+        digit = values[box]
+        for diagpeer in diagpeers[box]:
+            values[diagpeer] = values[diagpeer].replace(digit,'')
+    return values
+    pass
+
 def only_choice(values):
-    for unit in unitlist:
+    for unit in unitlist:   # For every unit (9 boxes)
         for digit in '123456789':
             dplaces = [box for box in unit if digit in values[box]]
+            if len(dplaces) == 1:
+                # If a digit appears only once in the boxes of 1 unit
+                values[dplaces[0]] = digit
+    return values
+    pass
+
+# Nothing different than previous function, except diagonal rule
+def diag_only_choice(values):
+    for diagunit in diagunitlist:
+        for digit in '123456789':
+            dplaces = [box for box in diagunit if digit in values[box]]
             if len(dplaces) == 1:
                 values[dplaces[0]] = digit
     return values
     pass
 
 def reduce_puzzle(values):
-    solved_values = [box for box in values.keys() if len(values[box]) == 1]
+    # Use a while loop to apply eliminate and only_choice iteratively until no change
     stalled = False
     while not stalled:
+        # Count the number of solved boxes whoes value length is 1
         solved_values_before = len([box for box in values.keys() if len(values[box]) == 1])
         values = eliminate(values)
         values = only_choice(values)
+        # Count the number of solved boxes whoes value length is 1
+        solved_values_after = len([box for box in values.keys() if len(values[box]) == 1])
+        # If before and after count is the same, meaning no change, return
+        stalled = solved_values_before == solved_values_after
+        if len([box for box in values.keys() if len(values[box]) == 0]):
+            return False
+    return values
+    pass
+
+# Nothing different than previous function, except diagonal rule
+def diag_reduce_puzzle(values):
+    stalled = False
+    while not stalled:
+        solved_values_before = len([box for box in values.keys() if len(values[box]) == 1])
+        values = diag_eliminate(values)
+        values = diag_only_choice(values)
         solved_values_after = len([box for box in values.keys() if len(values[box]) == 1])
         stalled = solved_values_before == solved_values_after
         if len([box for box in values.keys() if len(values[box]) == 0]):
@@ -144,10 +195,11 @@ def reduce_puzzle(values):
     return values
     pass
 
-def search1(values):
+def search1(values):    # My alternative search function which I think it's more sophisticated
     # "Using depth‐first search and propagation, create a search tree and solve the sudoku."
     # First, reduce the puzzle using the previous function     reduce_puzzle(values)
     # Choose one of the unfilled squares with the fewest possibilities
+    values = reduce_puzzle(values)
     if values is False:
         return False
     unsolved_values = [box for box in values.keys() if len(values[box]) > 1]
@@ -189,6 +241,27 @@ def search(values):
             return attempt
     pass
 
+# Nothing different than previous function, except diagonal rule
+def diag_search(values):
+    # "Using depth-first search and propagation, try all possible values."
+    # First, reduce the puzzle using the previous function
+    values = diag_reduce_puzzle(values)
+    #display(values)
+    if values is False:
+        return False ## Failed earlier
+    if all(len(values[s]) == 1 for s in boxes): 
+        return values ## Solved!
+    # Choose one of the unfilled squares with the fewest possibilities
+    n,s = min((len(values[s]), s) for s in boxes if len(values[s]) > 1)
+    # Now use recurrence to solve each one of the resulting sudokus, and 
+    for value in values[s]:
+        new_sudoku = values.copy()
+        new_sudoku[s] = value
+        attempt = diag_search(new_sudoku)
+        if attempt:
+            return attempt
+    pass
+
 def solve(grid):
     """
     Find the solution to a Sudoku grid.
@@ -198,7 +271,9 @@ def solve(grid):
     Returns:
         The dictionary representation of the final sudoku grid. False if no solution exists.
     """
-
+    values_dict = grid_values(grid)
+    return diag_search(values_dict)
+    pass
 
 if __name__ == '__main__':
     diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
