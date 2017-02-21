@@ -72,10 +72,8 @@ def naked_twins(values):
                     # of box and box2
                     for peerBox in peers[box]:
                         if (peerBox in peers[box2]) and len(values[peerBox]) > 1:
-                            peerBoxV = values[peerBox]
-                            peerBoxV = peerBoxV.replace(digit1, '')
-                            peerBoxV = peerBoxV.replace(digit2, '')
-                            assign_value(values, peerBox, peerBoxV)
+                            values[peerBox] = values[peerBox].replace(digit1, '')
+                            values[peerBox] = values[peerBox].replace(digit2, '')
         #print('after naked twins')
         #print(values)
         #display(values)
@@ -121,10 +119,8 @@ def diag_naked_twins(values):
                     # of box and box2
                     for peerBox in diagpeers[box]:
                         if (peerBox in diagpeers[box2]) and len(values[peerBox]) > 1:
-                            peerBoxV = values[peerBox]
-                            peerBoxV = peerBoxV.replace(digit1, '')
-                            peerBoxV = peerBoxV.replace(digit2, '')
-                            assign_value(values, peerBox, peerBoxV)
+                            values[peerBox] = values[peerBox].replace(digit1, '')
+                            values[peerBox] = values[peerBox].replace(digit2, '')
         #print('after naked twins')
         #print(values)
         #display(values)
