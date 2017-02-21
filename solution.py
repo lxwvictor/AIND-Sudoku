@@ -72,8 +72,10 @@ def naked_twins(values):
                     # of box and box2
                     for peerBox in peers[box]:
                         if (peerBox in peers[box2]) and len(values[peerBox]) > 1:
-                            values[peerBox] = values[peerBox].replace(digit1, '')
-                            values[peerBox] = values[peerBox].replace(digit2, '')
+                            peerBoxV = values[peerBox]
+                            peerBoxV = peerBoxV.replace(digit1, '')
+                            peerBoxV = peerBoxV.replace(digit2, '')
+                            values = assign_value(values, peerBox, peerBoxV)
         #print('after naked twins')
         #print(values)
         #display(values)
@@ -119,8 +121,10 @@ def diag_naked_twins(values):
                     # of box and box2
                     for peerBox in diagpeers[box]:
                         if (peerBox in diagpeers[box2]) and len(values[peerBox]) > 1:
-                            values[peerBox] = values[peerBox].replace(digit1, '')
-                            values[peerBox] = values[peerBox].replace(digit2, '')
+                            peerBoxV = values[peerBox]
+                            peerBoxV = peerBoxV.replace(digit1, '')
+                            peerBoxV = peerBoxV.replace(digit2, '')
+                            values = assign_value(values, peerBox, peerBoxV)
         #print('after naked twins')
         #print(values)
         #display(values)
@@ -175,7 +179,7 @@ def eliminate(values):
     for box in solved_values:
         digit = values[box]
         for peer in peers[box]: # Eliminate this value from all its peers
-            values[peer] = values[peer].replace(digit,'')
+            values = assign_value(values, peer, values[peer].replace(digit,''))
     return values
     pass
 
@@ -185,7 +189,7 @@ def diag_eliminate(values):
     for box in solved_values:
         digit = values[box]
         for diagpeer in diagpeers[box]:
-            values[diagpeer] = values[diagpeer].replace(digit,'')
+            values = assign_value(values, diagpeer, values[diagpeer].replace(digit,''))
     return values
     pass
 
@@ -195,7 +199,7 @@ def only_choice(values):
             dplaces = [box for box in unit if digit in values[box]]
             if len(dplaces) == 1:
                 # If a digit appears only once in the boxes of 1 unit
-                values[dplaces[0]] = digit
+                values = assign_value(values, dplaces[0], digit)
     return values
     pass
 
@@ -205,7 +209,7 @@ def diag_only_choice(values):
         for digit in '123456789':
             dplaces = [box for box in diagunit if digit in values[box]]
             if len(dplaces) == 1:
-                values[dplaces[0]] = digit
+                values = assign_value(values, dplaces[0], digit)
     return values
     pass
 
@@ -262,9 +266,36 @@ def search1(values):    # My alternative search function which I think it's more
     for i in range(0, len(sortedVK)):
         box = sortedVK[i][1]    # get the box key, which is the 2nd item
         for newV in values[box]:    # try for each possible value
-            newValues = values.copy()   # copy the existing value
-            newValues[box] = newV
-            attempt = search(newValues)
+            new_sudoku = values.copy()   # copy the existing value
+            new_sudoku = assign_value(new_sudoku, box, newV)
+            attempt = search(new_sudoku)
+            if attempt: # only if current branch resolves the puzzle
+                return attempt  ### Even though the code cannot pass, but I think it's more Robost 
+    pass
+
+def diag_search1(values):    # My alternative search function which I think it's more sophisticated
+    # "Using depth‐first search and propagation, create a search tree and solve the sudoku."
+    # First, reduce the puzzle using the previous function     reduce_puzzle(values)
+    # Choose one of the unfilled squares with the fewest possibilities
+    values = diag_reduce_puzzle(values)
+    if values is False:
+        return False
+    unsolved_values = [box for box in values.keys() if len(values[box]) > 1]
+
+    if len(unsolved_values) == 0:
+        return values   # solved
+    else:
+        sortedVK = sorted((len(values[box]), box) for box in unsolved_values)
+        # sort all the unresolved boxes in acending order based on the length of
+        # the value in the box                 
+
+    # Starting from the first element in the list
+    for i in range(0, len(sortedVK)):
+        box = sortedVK[i][1]    # get the box key, which is the 2nd item
+        for newV in values[box]:    # try for each possible value
+            new_sudoku = values.copy()   # copy the existing value
+            new_sudoku = assign_value(new_sudoku, box, newV)
+            attempt = diag_search1(new_sudoku)
             if attempt: # only if current branch resolves the puzzle
                 return attempt  ### Even though the code cannot pass, but I think it's more Robost 
     pass
@@ -282,7 +313,7 @@ def search(values):
     # Now use recurrence to solve each one of the resulting sudokus, and 
     for value in values[s]:
         new_sudoku = values.copy()
-        new_sudoku[s] = value
+        new_sudoku = assign_value(new_sudoku, s, value)
         attempt = search(new_sudoku)
         if attempt:
             return attempt
@@ -303,7 +334,7 @@ def diag_search(values):
     # Now use recurrence to solve each one of the resulting sudokus, and 
     for value in values[s]:
         new_sudoku = values.copy()
-        new_sudoku[s] = value
+        new_sudoku = assign_value(new_sudoku, s, value)
         attempt = diag_search(new_sudoku)
         if attempt:
             return attempt
@@ -319,7 +350,7 @@ def solve(grid):
         The dictionary representation of the final sudoku grid. False if no solution exists.
     """
     values_dict = grid_values(grid)
-    return diag_search(values_dict)
+    return diag_search1(values_dict)
     pass
 
 if __name__ == '__main__':
